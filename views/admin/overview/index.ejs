@@ -1,0 +1,202 @@
+<div class="overview-container">
+    <!-- Top Stats Row -->
+    <div class="row">
+        <!-- Sales Summary Card -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="fas fa-chart-line me-2"></i> Sales Summary
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="summary-item">
+                        <span class="summary-label">Today's Sales:</span>
+                        <span class="summary-value" id="todaySales">Loading...</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Transactions Count:</span>
+                        <span class="summary-value" id="transactionCount">Loading...</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Average Transaction Value:</span>
+                        <span class="summary-value" id="avgTransactionValue">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visitor Count Card -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="fas fa-users me-2"></i> Gym Visitors
+                    </h5>
+                    <div class="date-indicator">
+                        <span class="day" id="currentDay"></span>
+                        <span class="date" id="currentDate"></span>
+                    </div>
+                </div>
+                <div class="dashboard-card-body text-center">
+                    <div class="visitor-count" id="visitorCount">Loading...</div>
+                    <div class="visitor-trend" id="visitorTrend">
+                        <i class="fas fa-arrow-up me-1"></i> Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership Stats Card -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="fas fa-id-card me-2"></i> Membership Stats
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="membership-stats">
+                        <div class="stats-item">
+                            <span class="stats-label">Active Members:</span>
+                            <span class="stats-value" id="activeMembers">Loading...</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="stats-label">New This Month:</span>
+                            <span class="stats-value" id="newMembers">Loading...</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="stats-label">Expiring Soon:</span>
+                            <span class="stats-value text-warning" id="expiringMembers">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Weekly Revenue Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="fas fa-chart-bar me-2"></i> Weekly Revenue
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <canvas id="weeklyRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i class="fas fa-chart-pie me-2"></i> Member Distribution
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <canvas id="memberDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update date indicator
+    const now = new Date();
+    document.getElementById('currentDay').textContent = now.toLocaleDateString('en-US', { weekday: 'short' });
+    document.getElementById('currentDate').textContent = now.getDate();
+
+    // Fetch dashboard data
+    fetch('/api/admin/dashboard/stats')
+        .then(response => response.json())
+        .then(data => {
+            // Update sales summary
+            document.getElementById('todaySales').textContent = `₱${data.todaySales.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('transactionCount').textContent = data.transactionCount;
+            document.getElementById('avgTransactionValue').textContent = `₱${data.avgTransactionValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Update visitor stats
+            document.getElementById('visitorCount').textContent = data.visitorCount;
+            const trendElement = document.getElementById('visitorTrend');
+            trendElement.innerHTML = `
+                <i class="fas fa-arrow-${data.visitorTrendUp ? 'up' : 'down'} me-1"></i>
+                ${data.visitorTrendPercentage}% from yesterday
+            `;
+            trendElement.className = `visitor-trend text-${data.visitorTrendUp ? 'success' : 'danger'}`;
+
+            // Update membership stats
+            document.getElementById('activeMembers').textContent = data.activeMembers;
+            document.getElementById('newMembers').textContent = data.newMembers;
+            document.getElementById('expiringMembers').textContent = data.expiringMembers;
+
+            // Initialize charts
+            initializeWeeklyRevenueChart(data.weeklyRevenue);
+            initializeMemberDistributionChart(data.memberDistribution);
+        })
+        .catch(error => console.error('Error fetching dashboard data:', error));
+});
+
+function initializeWeeklyRevenueChart(data) {
+    const ctx = document.getElementById('weeklyRevenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Revenue',
+                data: data.values,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => '₱' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeMemberDistributionChart(data) {
+    const ctx = document.getElementById('memberDistributionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Day Pass', 'Monthly', 'Annually'],
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(75, 192, 192, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+</script>

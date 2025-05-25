@@ -1,0 +1,895 @@
+<!-- Manage Plans Page -->
+<div class="manage-plans-container">
+    <div class="plans-banner">
+        <div class="overlay"></div>        <div class="logo-section">            <div class="logo-container shine-effect">
+                <!-- Try multiple paths with final fallback to ensure logo displays -->
+                <img src="images/jbc_logo.jpg" 
+                     onerror="this.onerror=null; this.src='../../images/jbc_logo.jpg'; if(!this.complete) this.src='/images/jbc_logo.jpg'; if(!this.complete) this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNzgyRTlEIi8+PHRleHQgeD0iNTAiIHk9IjUwIiBmb250LXNpemU9IjI0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0id2hpdGUiPkpCQzwvdGV4dD48L3N2Zz4=';" 
+                     alt="JBC Fitness Gym Logo" class="gym-logo">
+            </div>
+            <h1 class="text-center membership-title">Membership Plans</h1>
+            <p class="text-center plan-subtitle">Choose the perfect plan for your fitness journey</p>
+        </div>
+    </div>
+      <div class="plans-header">
+        <div class="plans-counter">
+            <span class="plan-count"><%= activePlansCount %></span> active plans
+        </div>
+        <button class="btn gradient-btn add-plan-btn" id="addPlanBtn">
+            <i class="fas fa-plus me-2"></i> ADD PLAN
+        </button>
+    </div>
+
+    <!-- Plans Grid -->
+    <div class="plans-grid">
+        <% plans.forEach(function(plan) { %>
+            <div class="plan-card">
+                <div class="plan-header">
+                    <div class="plan-actions">
+                        <button class="edit-plan-btn" data-plan-id="<%= plan.plan_id %>">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-plan-btn" data-plan-id="<%= plan.plan_id %>">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="plan-price"><%= plan.plan_price %></div>
+                <div class="plan-features">
+                    <ul>
+                        <% JSON.parse(plan.plan_perks || '[]').forEach(function(perk) { %>
+                            <li><%= perk %></li>
+                        <% }); %>
+                    </ul>
+                </div>
+                <div class="plan-type">
+                    <span><%= plan.plan_name.toUpperCase() %></span>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+</div>
+
+<!-- Add New Plan Modal -->
+<div class="modal fade" id="addPlanModal" tabindex="-1" aria-labelledby="addPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPlanModalLabel">
+                    <i class="fas fa-plus me-2"></i> Add New Plan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPlanForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="addPlanName" class="form-label">Plan Name</label>
+                            <input type="text" class="form-control" id="addPlanName" name="planName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="addPlanDuration" class="form-label">Duration (Days)</label>
+                            <input type="number" min="1" class="form-control" id="addPlanDuration" name="planDuration" placeholder="Enter number of days" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="addPlanPrice" class="form-label">Price (₱)</label>
+                            <input type="number" step="0.01" class="form-control" id="addPlanPrice" name="planPrice" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="addPlanDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="addPlanDescription" name="planDescription" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Perks</label>
+                        <div class="add-perks-container">
+                            <div class="perk-item d-flex align-items-center mb-2">
+                                <input type="text" class="form-control me-2" name="planPerks[]" placeholder="Enter perk" required>
+                                <button type="button" class="btn btn-danger btn-sm remove-perk"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2" id="addNewPerkBtn">
+                            <i class="fas fa-plus"></i> Add Perk
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn gradient-btn" id="saveNewPlanBtn">Save Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Plan Modal -->
+<div class="modal fade" id="editPlanModal" tabindex="-1" aria-labelledby="editPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPlanModalLabel">
+                    <i class="fas fa-edit me-2"></i> Edit Plan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPlanForm">
+                    <input type="hidden" id="editPlanId" name="planId">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editPlanName" class="form-label">Plan Name</label>
+                            <input type="text" class="form-control" id="editPlanName" name="planName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPlanDuration" class="form-label">Duration (Days)</label>
+                            <input type="number" min="1" class="form-control" id="editPlanDuration" name="planDuration" placeholder="Enter number of days" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="editPlanPrice" class="form-label">Price (₱)</label>
+                            <input type="number" step="0.01" class="form-control" id="editPlanPrice" name="planPrice" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editPlanDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editPlanDescription" name="planDescription" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Perks</label>
+                        <div class="edit-perks-container">
+                            <!-- Perks will be dynamically added here -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2" id="editAddPerkBtn">
+                            <i class="fas fa-plus"></i> Add Perk
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn gradient-btn" id="updatePlanBtn">Update Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Manage Plans Styles */
+    .manage-plans-container {
+        padding: 0;
+    }    /* Banner and Logo section */    .plans-banner {
+        position: relative;
+        padding: 10px 0; /* Further reduced padding from 20px to 10px */
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23782e9d" fill-opacity="0.1" d="M0,96L48,101.3C96,107,192,117,288,144C384,171,480,213,576,208C672,203,768,149,864,138.7C960,128,1056,160,1152,170.7C1248,181,1344,171,1392,165.3L1440,160L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>');
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center bottom;
+        margin-bottom: 25px; /* Further reduced margin from 30px to 25px */
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(120, 46, 157, 0.05) 0%, rgba(142, 68, 173, 0.1) 100%);
+    }
+    
+    .logo-section {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+    }      .logo-container {
+        width: 80px; /* Further reduced from 100px to 80px */
+        height: 80px; /* Further reduced from 100px to 80px */
+        margin-bottom: 10px; /* Further reduced from 15px to 10px */
+        position: relative;
+        border-radius: 50%;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* Reduced shadow */
+        overflow: hidden;
+    }
+    
+    .shine-effect {
+        position: relative;
+    }
+    
+    .shine-effect:before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+        transform: rotate(-45deg);
+        animation: shine 3s infinite;
+        z-index: 2;
+        pointer-events: none;
+    }
+    
+    @keyframes shine {
+        0% {
+            transform: translateX(-100%) rotate(-45deg);
+        }
+        100% {
+            transform: translateX(100%) rotate(-45deg);
+        }
+    }
+    
+    .gym-logo {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }      .membership-title {
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 2.2rem; /* Further reduced from 2.6rem to 2.2rem */
+        margin: 2px 0 6px; /* Further reduced from 5px 0 10px to 2px 0 6px */
+        text-align: center;
+        background: linear-gradient(135deg, var(--primary) 20%, #8e44ad 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1)); /* Reduced shadow */
+    }      .plan-subtitle {
+        font-size: 0.9rem; /* Further reduced from 1rem to 0.9rem */
+        color: #666;
+        margin-bottom: 5px; /* Further reduced from 10px to 5px */
+        font-weight: 400;
+    }.plans-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px; /* Reduced from 40px */
+        background: white;
+        border-radius: 15px;
+        padding: 15px 25px; /* Reduced top/bottom padding from 20px to 15px */
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+      .plans-counter {
+        font-size: 1rem; /* Reduced from 1.2rem */
+        color: #666;
+        display: flex;
+        align-items: center;
+    }
+      .plan-count {
+        background: linear-gradient(135deg, var(--primary) 0%, #8e44ad 100%);
+        color: white;
+        border-radius: 50%;
+        width: 30px; /* Reduced from 36px */
+        height: 30px; /* Reduced from 36px */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        font-weight: 700;
+        box-shadow: 0 3px 10px rgba(120, 46, 157, 0.3);
+    }
+      .add-plan-btn {
+        padding: 10px 24px; /* Reduced from 12px 28px */
+        border-radius: 30px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.85rem; /* Reduced from 0.9rem */
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    /* Plans grid */
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+    }    /* Plan card styling */
+    .plan-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s ease;
+        position: relative;
+        border: none;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+    }
+    
+    .plan-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(135deg, var(--primary) 0%, #8e44ad 100%);
+        z-index: 1;
+    }
+    
+    .plan-card:after {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+      .plan-card:hover {
+        transform: translateY(-10px) rotateX(3deg);
+        box-shadow: 0 15px 35px rgba(138, 43, 226, 0.2);
+    }
+    
+    .plan-card:hover::after {
+        opacity: 1;
+    }
+    
+    .plan-header {
+        padding: 15px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .plan-actions {
+        display: flex;
+        gap: 10px;
+    }
+      .edit-plan-btn, .delete-plan-btn {
+        background: none;
+        border: none;
+        padding: 5px;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .edit-plan-btn {
+        background: rgba(74, 111, 220, 0.1);
+        color: #4a6fdc;
+    }
+    
+    .delete-plan-btn {
+        background: rgba(220, 74, 95, 0.1);
+        color: #dc4a5f;
+    }
+    
+    .edit-plan-btn:hover {
+        background-color: #4a6fdc;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(74, 111, 220, 0.3);
+    }
+    
+    .delete-plan-btn:hover {
+        background-color: #dc4a5f;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(220, 74, 95, 0.3);
+    }.plan-price {
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+        padding: 30px 0;
+        color: #333;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: linear-gradient(145deg, #f8f9fd, #ffffff);
+        text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+    }
+    
+    .plan-price::before {
+        content: "₱";
+        font-size: 1.8rem;
+        vertical-align: super;
+        position: relative;
+        top: -5px;
+        margin-right: 3px;
+        font-weight: 600;
+        opacity: 0.8;
+    }
+    
+    .plan-price::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 5%;
+        width: 90%;
+        height: 2px;
+        background: linear-gradient(to right, 
+            transparent 0%, 
+            rgba(120, 46, 157, 0.6) 50%, 
+            transparent 100%
+        );
+    }
+      .plan-features {
+        padding: 10px 25px 25px;
+        flex-grow: 1;
+    }
+    
+    .plan-features ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 10px 0 0;
+    }
+    
+    .plan-features li {
+        padding: 12px 0;
+        position: relative;
+        padding-left: 30px;
+        border-bottom: 1px dashed rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .plan-features li:last-child {
+        border-bottom: none;
+    }
+    
+    .plan-card:hover .plan-features li {
+        transform: translateX(5px);
+    }
+    
+    .plan-features li::before {
+        content: "✓";
+        position: absolute;
+        left: 5px;
+        color: var(--primary);
+        font-weight: bold;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(135deg, rgba(120, 46, 157, 0.1) 0%, rgba(142, 68, 173, 0.2) 100%);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+      .plan-type {
+        background: linear-gradient(135deg, var(--primary) 0%, #8e44ad 100%);
+        color: white;
+        font-weight: 700;
+        text-align: center;
+        padding: 18px;
+        letter-spacing: 2px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        text-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .plan-type:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+        z-index: -1;
+    }
+    
+    .plan-type span {
+        position: relative;
+        font-size: 1.1rem;
+    }
+    
+    .plan-type span:after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background-color: rgba(255, 255, 255, 0.7);
+        transition: width 0.3s ease;
+    }
+    
+    .plan-card:hover .plan-type span:after {
+        width: 50%;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .plans-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+      /* Gradient Button Styling */
+    .gradient-btn {
+        background: linear-gradient(135deg, var(--primary) 0%, #8e44ad 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.4s ease;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .gradient-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #8e44ad 0%, var(--primary) 100%);
+        opacity: 0;
+        z-index: -1;
+        transition: opacity 0.4s ease;
+    }
+    
+    .gradient-btn:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(120, 46, 157, 0.3);
+    }
+    
+    .gradient-btn:hover::before {
+        opacity: 1;
+    }
+    
+    .gradient-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Plan button click handler
+        document.getElementById('addPlanBtn').addEventListener('click', function() {
+            document.getElementById('addPlanForm').reset();
+            const perksContainer = document.querySelector('.add-perks-container');
+            perksContainer.innerHTML = `
+                <div class="perk-item d-flex align-items-center mb-2">
+                    <input type="text" class="form-control me-2" name="planPerks[]" placeholder="Enter perk" required>
+                    <button type="button" class="btn btn-danger btn-sm remove-perk"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('addPlanModal')).show();
+        });
+
+        // Helper function to parse perks safely
+        function safeParsePerks(perksString) {
+            try {
+                const perks = JSON.parse(perksString || '[]');
+                return Array.isArray(perks) ? perks : [];
+            } catch (error) {
+                console.error('Error parsing perks:', error);
+                return [];
+            }
+        }
+
+        // Edit plan button click handler
+        document.querySelectorAll('.edit-plan-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const planId = this.getAttribute('data-plan-id');
+                
+                // Fetch plan data from server
+                fetch(`/admin/plans/${planId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch plan data');
+                        }
+                        return response.json();
+                    })
+                    .then(plan => {
+                        // Set the plan ID for the form
+                        document.getElementById('editPlanId').value = plan.plan_id;
+                        
+                        // Fill in basic plan details
+                        document.getElementById('editPlanName').value = plan.plan_name || '';
+                        document.getElementById('editPlanDuration').value = plan.plan_duration || '';
+                        document.getElementById('editPlanPrice').value = plan.plan_price || '';
+                        document.getElementById('editPlanDescription').value = plan.plan_description || '';
+                        
+                        // Clear existing perks
+                        const perksContainer = document.querySelector('.edit-perks-container');
+                        perksContainer.innerHTML = '';
+                        
+                        // Add perks from the plan
+                        let perks = [];
+                        if (plan.plan_perks) {
+                            if (typeof plan.plan_perks === 'string') {
+                                try {
+                                    perks = JSON.parse(plan.plan_perks);
+                                } catch (e) {
+                                    console.error('Error parsing perks:', e);
+                                }
+                            } else if (Array.isArray(plan.plan_perks)) {
+                                perks = plan.plan_perks;
+                            }
+                        }
+                        
+                        // Ensure perks is an array
+                        if (!Array.isArray(perks)) {
+                            perks = [];
+                        }
+
+                        // Add all perks to the form
+                        perks.forEach(perk => {
+                            if (perk && typeof perk === 'string') {
+                                const perkItem = createPerkItem(perk.trim());
+                                perksContainer.appendChild(perkItem);
+                            }
+                        });
+                        
+                        // If no perks were added, add one empty perk field
+                        if (perks.length === 0) {
+                            perksContainer.appendChild(createPerkItem());
+                        }
+                        
+                        // Show modal
+                        new bootstrap.Modal(document.getElementById('editPlanModal')).show();
+                        setupRemovePerkHandlers();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching plan:', error);
+                        alert('Error loading plan details. Please try again.');
+                    });
+            });
+        });
+        
+        // Delete plan button click handler
+        document.querySelectorAll('.delete-plan-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const planId = this.getAttribute('data-plan-id');
+                if (confirm('Are you sure you want to delete this plan?')) {
+                    fetch(`/admin/plans/${planId}`, { method: 'DELETE' })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Failed to delete plan');
+                            location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Error deleting plan. Please try again.');
+                        });
+                }
+            });
+        });
+
+        function handlePlanSubmit(mode) {
+            const isEdit = mode === 'edit';
+            const formId = isEdit ? 'editPlanForm' : 'addPlanForm';
+            const modalId = isEdit ? 'editPlanModal' : 'addPlanModal';
+            const form = document.getElementById(formId);
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const prefix = isEdit ? 'edit' : 'add';
+            const formData = {
+                planName: document.getElementById(prefix + 'PlanName').value.trim(),
+                planDescription: document.getElementById(prefix + 'PlanDescription').value.trim(),
+                planDuration: parseInt(document.getElementById(prefix + 'PlanDuration').value),
+                planPrice: parseFloat(document.getElementById(prefix + 'PlanPrice').value),
+                planPerks: []
+            };
+
+            // Collect and validate all perks
+            const perkInputs = form.querySelectorAll('input[name="planPerks[]"]');
+            let hasEmptyPerk = false;
+            
+            perkInputs.forEach(function(input) {
+                const perkValue = input.value.trim();
+                if (perkValue) {
+                    formData.planPerks.push(perkValue);
+                } else {
+                    hasEmptyPerk = true;
+                }
+            });
+
+            if (hasEmptyPerk) {
+                alert('Please fill in all perk fields or remove empty ones.');
+                return;
+            }
+
+            // Convert perks array to JSON string
+            formData.planPerks = JSON.stringify(formData.planPerks);
+
+            // Add plan ID for edit mode
+            if (isEdit) {
+                formData.planId = document.getElementById('editPlanId').value;
+            }
+
+            // Send to server
+            fetch(`/admin/plans${isEdit ? '/' + formData.planId : ''}`, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Network response was not ok');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
+                location.reload();
+            })
+            .catch(error => {
+                console.error(`Error ${isEdit ? 'updating' : 'saving'} plan:`, error);
+                alert(`Error ${isEdit ? 'updating' : 'saving'} plan: ${error.message}`);
+            });
+        }
+
+        // Add new perk button handlers
+        document.getElementById('addNewPerkBtn').addEventListener('click', function() {
+            document.querySelector('.add-perks-container').appendChild(createPerkItem());
+            setupRemovePerkHandlers();
+        });
+
+        document.getElementById('editAddPerkBtn').addEventListener('click', function() {
+            document.querySelector('.edit-perks-container').appendChild(createPerkItem());
+            setupRemovePerkHandlers();
+        });
+
+        // Save new plan handler
+        document.getElementById('saveNewPlanBtn').addEventListener('click', function() {
+            handlePlanSubmit('add');
+        });
+
+        // Update plan handler
+        document.getElementById('updatePlanBtn').addEventListener('click', function() {
+            handlePlanSubmit('edit');
+        });
+
+        // Helper functions
+        function createPerkItem(value = '') {
+            const perkItem = document.createElement('div');
+            perkItem.className = 'perk-item d-flex align-items-center mb-2';
+            perkItem.innerHTML = `
+                <input type="text" class="form-control me-2" name="planPerks[]" value="${value}" placeholder="Enter perk" required>
+                <button type="button" class="btn btn-danger btn-sm remove-perk"><i class="fas fa-times"></i></button>
+            `;
+            return perkItem;
+        }
+
+        function setupRemovePerkHandlers() {
+            document.querySelectorAll('.remove-perk').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.perk-item').remove();
+                });
+            });
+        }
+
+        // Initial setup
+        setupRemovePerkHandlers();
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        // Handle adding new perk fields
+        $('#addPerkBtn').click(function() {
+            const newPerkItem = `
+                <div class="perk-item d-flex align-items-center mb-2">
+                    <input type="text" class="form-control me-2" name="planPerks[]" placeholder="Enter perk">
+                    <button type="button" class="btn btn-danger btn-sm remove-perk"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            $('.perks-container').append(newPerkItem);
+        });
+
+        // Handle removing perk fields
+        $(document).on('click', '.remove-perk', function() {
+            $(this).closest('.perk-item').remove();
+        });
+
+        // Handle form submission
+        $('#planForm').submit(function(e) {
+            e.preventDefault();
+            const formData = {
+                planId: $('#planId').val(),
+                planName: $('#planName').val(),
+                planDescription: $('#planDescription').val(),
+                planDuration: $('#planDuration').val(),
+                planPrice: $('#planPrice').val(),
+                planPerks: []
+            };
+
+            // Collect all perks
+            $('input[name="planPerks[]"]').each(function() {
+                const perkValue = $(this).val().trim();
+                if (perkValue) {
+                    formData.planPerks.push(perkValue);
+                }
+            });
+
+            // Send to server
+            $.ajax({
+                url: '/admin/plans' + (formData.planId ? '/update' : '/create'),
+                method: formData.planId ? 'PUT' : 'POST',
+                data: formData,
+                success: function(response) {
+                    $('#planModal').modal('hide');
+                    // Refresh the plans display
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    alert('Error saving plan: ' + error);
+                }
+            });
+        });
+
+        // Handle edit plan
+        $('.edit-plan').click(function() {
+            const planId = $(this).data('plan-id');
+            // Fetch plan details and populate form
+            $.get('/admin/plans/' + planId, function(plan) {
+                $('#planId').val(plan.plan_id);
+                $('#planName').val(plan.plan_name);
+                $('#planDescription').val(plan.plan_description);
+                $('#planDuration').val(plan.plan_duration);
+                $('#planPrice').val(plan.plan_price);
+                
+                // Clear existing perks
+                $('.perks-container').empty();
+                
+                // Add perk fields for existing perks
+                plan.plan_perks.forEach(perk => {
+                    const perkItem = `
+                        <div class="perk-item d-flex align-items-center mb-2">
+                            <input type="text" class="form-control me-2" name="planPerks[]" value="${perk}" placeholder="Enter perk">
+                            <button type="button" class="btn btn-danger btn-sm remove-perk"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                    $('.perks-container').append(perkItem);
+                });
+                
+                $('#planModal').modal('show');
+            });
+        });
+
+        // Clear form when adding new plan
+        $('.add-plan').click(function() {
+            $('#planForm')[0].reset();
+            $('#planId').val('');
+            $('.perks-container').html(`
+                <div class="perk-item d-flex align-items-center mb-2">
+                    <input type="text" class="form-control me-2" name="planPerks[]" placeholder="Enter perk">
+                    <button type="button" class="btn btn-danger btn-sm remove-perk"><i class="fas fa-times"></i></button>
+                </div>
+            `);
+        });
+    });
+</script>

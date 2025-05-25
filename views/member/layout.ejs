@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JBC Fitness Gym - Member Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary: #451968;
+            --primary-light: #782e9d;
+            --primary-dark: #441170;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --medium-gray: #e9ecef;
+            --gradient-primary: linear-gradient(145deg, #3a1356 0%, #451968 30%, #6a2590 70%, #782e9d 100%);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --header-height: 70px;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-gray);
+            overflow-x: hidden;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--gradient-primary);
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: width var(--transition-speed), transform var(--transition-speed);
+            z-index: 1000;
+        }
+
+        /* Custom scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .sidebar-header {
+            padding: 25px 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            position: relative;
+        }
+
+        .logo-area {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .logo-area img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logo-area h3 {
+            color: var(--white);
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .menu-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 15px 25px 5px;
+        }
+
+        .menu-item {
+            padding: 12px 25px;
+            color: var(--white);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--white);
+        }
+
+        .menu-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Content Area */
+        .content-wrapper {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: margin var(--transition-speed);
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .member-badge {
+            background-color: #17a2b8;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-wrapper {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <img src="/images/jbc_logo.jpg" alt="JBC Fitness Gym">
+            <h3>JBC Fitness</h3>
+        </div>
+        
+        <div class="sidebar-header">
+            <div class="user-initials">
+                <% 
+                try {
+                    if (user && user.first_name && user.last_name) {
+                        %><%= (user.first_name[0] + user.last_name[0]).toUpperCase() %><%
+                    } else {
+                        %>M<%
+                    }
+                } catch(e) { 
+                    %>M<%
+                } 
+                %>
+            </div>
+            <p class="welcome-text">Welcome!</p>
+            <h4>
+                <% if (user && user.first_name && user.last_name) { %>
+                    <%= user.first_name + ' ' + user.last_name %>
+                <% } else { %>
+                    Member
+                <% } %>
+                <span class="member-badge">Member</span>
+            </h4>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="menu-label">Dashboard</div>
+            <a href="/member/overview" class="menu-item <%= page === 'overview' ? 'active' : '' %>" data-title="Overview">
+                <i class="fas fa-tachometer-alt"></i> <span class="menu-text">Overview</span>
+            </a>
+            
+            <div class="menu-label">Membership</div>
+            <a href="/member/membership" class="menu-item <%= page === 'membership' ? 'active' : '' %>" data-title="Membership">
+                <i class="fas fa-id-card"></i> <span class="menu-text">Membership</span>
+            </a>
+            <a href="/member/track_attendance" class="menu-item <%= page === 'track_attendance' ? 'active' : '' %>" data-title="Track Attendance">
+                <i class="fas fa-clipboard-check"></i> <span class="menu-text">Track Attendance</span>
+            </a>
+            
+            <div class="menu-label">Account</div>
+            <a href="/member/profile" class="menu-item <%= page === 'profile' ? 'active' : '' %>" data-title="Profile">
+                <i class="fas fa-user-circle"></i> <span class="menu-text">Profile</span>
+            </a>
+            <a href="/logout" class="menu-item" data-title="Logout">
+                <i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1 id="pageTitle"><%= page.charAt(0).toUpperCase() + page.slice(1).replace(/_/g, ' ') %></h1>
+        </div>
+        
+        <div class="page-content">
+            <%- include(`./${page}/index`) %>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>    <script src="/js/member.js"></script>
+    <script>
+        // Mobile sidebar toggle
+        document.getElementById('mobileToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+            
+            document.body.style.overflow = 'hidden';
+        });
+        
+        document.getElementById('overlay').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            
+            sidebar.classList.remove('active');
+            this.classList.remove('active');
+            
+            document.body.style.overflow = '';
+        });
+    </script>
+</body>
+</html>

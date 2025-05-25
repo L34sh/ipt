@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JBC Fitness Gym - Clerk Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/admin-style.css">
+</head>
+<body>
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <img src="/images/jbc_logo.jpg" alt="JBC Fitness Gym">
+            <h3>JBC Fitness</h3>
+        </div>        <div class="sidebar-header">
+            <div class="user-initials">
+                <% 
+                try {
+                    if (user && user.first_name && user.last_name) {
+                        %><%= (user.first_name[0] + user.last_name[0]).toUpperCase() %><%
+                    } else {
+                        %>C<%
+                    }
+                } catch(e) { 
+                    %>C<%
+                } 
+                %>
+            </div>
+            <p class="welcome-text">Welcome!</p>
+            <h4>
+                <% if (user && user.first_name && user.last_name) { %>
+                    <%= user.first_name + ' ' + user.last_name %>
+                <% } else { %>
+                    Clerk
+                <% } %>
+                <span class="clerk-badge">Clerk</span>
+            </h4>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="menu-label">Dashboard</div>
+            <a href="/clerk/overview" class="menu-item <%= page === 'overview' ? 'active' : '' %>" data-title="Overview">
+                <i class="fas fa-tachometer-alt"></i> <span class="menu-text">Overview</span>
+            </a>
+            
+            <div class="menu-label">Management</div>
+            <a href="/clerk/manage_customers" class="menu-item <%= page === 'manage_customers' ? 'active' : '' %>" data-title="Manage Customers">
+                <i class="fas fa-users"></i> <span class="menu-text">Manage Customers</span>
+            </a>
+            <a href="/clerk/monitor_attendance" class="menu-item <%= page === 'monitor_attendance' ? 'active' : '' %>" data-title="Monitor Attendance">
+                <i class="fas fa-clipboard-check"></i> <span class="menu-text">Monitor Attendance</span>
+            </a>
+            
+            <div class="menu-label">Products & Sales</div>
+            <a href="/clerk/products" class="menu-item <%= page === 'products' ? 'active' : '' %>" data-title="Products">
+                <i class="fas fa-box"></i> <span class="menu-text">Products</span>
+            </a>
+            <a href="/clerk/sales" class="menu-item <%= page === 'sales' ? 'active' : '' %>" data-title="Sales">
+                <i class="fas fa-chart-line"></i> <span class="menu-text">Sales</span>
+            </a>
+            
+            <div class="menu-label">Account</div>
+            <a href="/clerk/profile" class="menu-item <%= page === 'profile' ? 'active' : '' %>" data-title="Profile">
+                <i class="fas fa-user-circle"></i> <span class="menu-text">Profile</span>
+            </a>
+            <a href="/logout" class="menu-item" data-title="Logout">
+                <i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+        <div class="page-header">
+            <h1 id="pageTitle"><%= page.charAt(0).toUpperCase() + page.slice(1).replace(/_/g, ' ') %></h1>
+        </div>
+        
+        <div class="page-content">
+            <%- include(`./${page}/index`) %>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>

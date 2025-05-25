@@ -1,0 +1,183 @@
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sales Summary Card -->
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Sales Summary</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                This Month
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Today</a></li>
+                                <li><a class="dropdown-item" href="#">This Week</a></li>
+                                <li><a class="dropdown-item" href="#">This Month</a></li>
+                                <li><a class="dropdown-item" href="#">This Year</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">Total Sales</h6>
+                                <h4 class="mb-0">₱<span id="totalSales">0.00</span></h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">Products Sold</h6>
+                                <h4 class="mb-0"><span id="productsSold">0</span></h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">New Members</h6>
+                                <h4 class="mb-0"><span id="newMembers">0</span></h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">Active Plans</h6>
+                                <h4 class="mb-0"><span id="activePlans">0</span></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales History -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0">Sales History</h5>
+                        <div class="d-flex gap-2">
+                            <input type="date" class="form-control form-control-sm" id="startDate">
+                            <input type="date" class="form-control form-control-sm" id="endDate">
+                            <button class="btn btn-primary btn-sm">Filter</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Transaction ID</th>
+                                    <th>Customer</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTable">
+                                <!-- Sales data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <nav aria-label="Sales pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Transaction Modal -->
+<div class="modal fade" id="viewTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <h6 class="text-muted">Transaction Information</h6>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Transaction ID</label>
+                            <p class="fw-bold mb-0" id="transactionId"></p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Date & Time</label>
+                            <p class="fw-bold mb-0" id="transactionDate"></p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Type</label>
+                            <p class="fw-bold mb-0" id="transactionType"></p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Status</label>
+                            <p class="fw-bold mb-0" id="transactionStatus"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="text-muted">Customer Information</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Name</label>
+                            <p class="fw-bold mb-0" id="customerName"></p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Email</label>
+                            <p class="fw-bold mb-0" id="customerEmail"></p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Phone</label>
+                            <p class="fw-bold mb-0" id="customerPhone"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="text-muted">Items</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionItems">
+                                <!-- Transaction items will be loaded here -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Total:</th>
+                                    <th class="text-end" id="transactionTotal"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+</div>

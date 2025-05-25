@@ -1,0 +1,186 @@
+<!-- Manage Customers Page -->
+<div class="manage-customers-container">
+    <!-- Membership Type Tabs -->
+    <ul class="nav nav-tabs membership-tabs mb-4" id="membershipTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="day-pass-tab" data-bs-toggle="tab" data-bs-target="#day-pass-content" type="button" role="tab" aria-controls="day-pass-content" aria-selected="true">DAY-PASS</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly-content" type="button" role="tab" aria-controls="monthly-content" aria-selected="false">MONTHLY</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="annually-tab" data-bs-toggle="tab" data-bs-target="#annually-content" type="button" role="tab" aria-controls="annually-content" aria-selected="false">ANNUALLY</button>
+        </li>
+    </ul>
+
+    <!-- Search and Add Customer -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control search-input" placeholder="Search customer..." id="customerSearch">
+                <button class="btn btn-outline-secondary search-btn" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary add-btn" id="addCustomerBtn">
+                <i class="fas fa-plus me-2"></i> ADD ACCOUNT
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="membershipTabsContent">
+        <!-- DAY PASS Tab Content -->
+        <div class="tab-pane fade show active" id="day-pass-content" role="tabpanel" aria-labelledby="day-pass-tab">
+            <div class="row">
+                <!-- Customer List -->
+                <div class="col-md-8">
+                    <div class="customer-list">
+                        <div class="customer-list-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">Name</div>
+                                <div class="col-md-6 text-end">Actions</div>
+                            </div>
+                        </div>
+                        <div class="customer-list-body" id="dayPassCustomerList">
+                            <!-- Customer items will be populated here via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Customer Details -->
+                <div class="col-md-4">
+                    <div class="customer-details" id="dayPassCustomerDetails">
+                        <!-- Customer details will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar structure for MONTHLY and ANNUALLY tabs -->
+        <div class="tab-pane fade" id="monthly-content" role="tabpanel" aria-labelledby="monthly-tab">
+            <!-- Monthly content structure -->
+        </div>
+        <div class="tab-pane fade" id="annually-content" role="tabpanel" aria-labelledby="annually-tab">
+            <!-- Annual content structure -->
+        </div>
+    </div>
+</div>
+
+<!-- Add Customer Modal -->
+<%- include('_add_customer_modal') %>
+
+<!-- Edit Customer Modal -->
+<%- include('_edit_customer_modal') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize customer management functionality
+    initializeCustomerManagement();
+});
+
+function initializeCustomerManagement() {
+    // Fetch and display customers based on membership type
+    fetchCustomers('day-pass');
+    
+    // Handle tab changes
+    const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabs.forEach(tab => {
+        tab.addEventListener('show.bs.tab', function(e) {
+            const membershipType = e.target.id.replace('-tab', '');
+            fetchCustomers(membershipType);
+        });
+    });
+
+    // Handle search
+    const searchInput = document.getElementById('customerSearch');
+    searchInput.addEventListener('input', debounce(function(e) {
+        const activeTab = document.querySelector('.tab-pane.active');
+        const membershipType = activeTab.id.replace('-content', '');
+        fetchCustomers(membershipType, e.target.value);
+    }, 300));
+
+    // Handle add customer button
+    document.getElementById('addCustomerBtn').addEventListener('click', function() {
+        // Show add customer modal
+        const modal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+        modal.show();
+    });
+}
+
+function fetchCustomers(membershipType, searchQuery = '') {
+    fetch(`/api/admin/customers?type=${membershipType}&search=${searchQuery}`)
+        .then(response => response.json())
+        .then(data => {
+            updateCustomerList(membershipType, data);
+        })
+        .catch(error => console.error('Error fetching customers:', error));
+}
+
+function updateCustomerList(membershipType, customers) {
+    const listContainer = document.getElementById(`${membershipType}CustomerList`);
+    listContainer.innerHTML = customers.map(customer => `
+        <div class="customer-item" data-customer-id="${customer.id}">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="customer-name">${customer.name}</div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-sm btn-outline-primary view-btn" data-customer-id="${customer.id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary edit-btn" data-customer-id="${customer.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn" data-customer-id="${customer.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // Add event listeners to the new buttons
+    addCustomerItemEventListeners();
+}
+
+function addCustomerItemEventListeners() {
+    // View button listeners
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const customerId = this.dataset.customerId;
+            viewCustomerDetails(customerId);
+        });
+    });
+
+    // Edit button listeners
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const customerId = this.dataset.customerId;
+            editCustomer(customerId);
+        });
+    });
+
+    // Delete button listeners
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const customerId = this.dataset.customerId;
+            deleteCustomer(customerId);
+        });
+    });
+}
+
+// Utility function for debouncing search input
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+</script>

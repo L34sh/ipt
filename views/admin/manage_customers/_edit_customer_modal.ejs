@@ -1,0 +1,49 @@
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerModalLabel">Edit Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomerForm">
+                    <input type="hidden" id="editCustomerId" name="id">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editCustomerName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="editCustomerName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editCustomerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editCustomerEmail" name="email" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editCustomerPhone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="editCustomerPhone" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editMembershipType" class="form-label">Membership Type</label>
+                            <select class="form-select" id="editMembershipType" name="membershipType" required>
+                                <option value="">Select membership type</option>
+                                <option value="day-pass">Day Pass</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="annually">Annually</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCustomerAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="editCustomerAddress" name="address" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateCustomerBtn">Update Customer</button>
+            </div>
+        </div>
+    </div>
+</div>

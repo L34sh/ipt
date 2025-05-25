@@ -1,0 +1,276 @@
+<!-- Monitor Attendance Page -->
+<div class="attendance-container">
+    <!-- Date Filter and Search -->
+    <div class="filters-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="date" class="form-control" id="attendanceDate" value="<%= new Date().toISOString().split('T')[0] %>">
+                    <button class="btn btn-outline-secondary" type="button" id="filterByDate">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchMember" placeholder="Search member...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-primary" id="recordAttendanceBtn">
+                    <i class="fas fa-plus me-2"></i> Record Attendance
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Stats -->
+    <div class="stats-section mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h5>Today's Check-ins</h5>
+                    <div class="stat-value" id="todayCheckins">Loading...</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h5>Active Members</h5>
+                    <div class="stat-value" id="activeMembers">Loading...</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h5>Peak Hours</h5>
+                    <div class="stat-value" id="peakHours">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Member ID</th>
+                    <th>Name</th>
+                    <th>Check-in Time</th>
+                    <th>Check-out Time</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody">
+                <!-- Data will be loaded dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Record Attendance Modal -->
+<div class="modal fade" id="recordAttendanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Attendance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="attendanceForm">
+                    <div class="mb-3">
+                        <label for="memberId" class="form-label">Member ID</label>
+                        <input type="text" class="form-control" id="memberId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="checkInTime" class="form-label">Check-in Time</label>
+                        <input type="datetime-local" class="form-control" id="checkInTime" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveAttendanceBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadAttendanceData();
+    setupEventListeners();
+});
+
+function loadAttendanceData() {
+    const date = document.getElementById('attendanceDate').value;
+    
+    // Fetch attendance data from API
+    fetch(`/api/admin/attendance?date=${date}`)
+        .then(response => response.json())
+        .then(data => {
+            updateStats(data.stats);
+            updateAttendanceTable(data.attendance);
+        })
+        .catch(error => console.error('Error loading attendance data:', error));
+}
+
+function updateStats(stats) {
+    document.getElementById('todayCheckins').textContent = stats.todayCheckins;
+    document.getElementById('activeMembers').textContent = stats.activeMembers;
+    document.getElementById('peakHours').textContent = stats.peakHours;
+}
+
+function updateAttendanceTable(attendance) {
+    const tbody = document.getElementById('attendanceTableBody');
+    tbody.innerHTML = attendance.map(record => `
+        <tr>
+            <td>${record.memberId}</td>
+            <td>${record.memberName}</td>
+            <td>${formatDateTime(record.checkInTime)}</td>
+            <td>${record.checkOutTime ? formatDateTime(record.checkOutTime) : '-'}</td>
+            <td>${calculateDuration(record.checkInTime, record.checkOutTime)}</td>
+            <td>
+                <span class="badge ${record.checkOutTime ? 'bg-success' : 'bg-primary'}">
+                    ${record.checkOutTime ? 'Completed' : 'Active'}
+                </span>
+            </td>
+            <td>
+                ${!record.checkOutTime ? `
+                    <button class="btn btn-sm btn-outline-primary" onclick="recordCheckOut('${record.id}')">
+                        Check-out
+                    </button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function setupEventListeners() {
+    // Filter by date
+    document.getElementById('filterByDate').addEventListener('click', loadAttendanceData);
+    
+    // Search functionality
+    document.getElementById('searchMember').addEventListener('input', debounce(function(e) {
+        const searchTerm = e.target.value;
+        // Implement search logic
+    }, 300));
+    
+    // Record attendance button
+    document.getElementById('recordAttendanceBtn').addEventListener('click', () => {
+        document.getElementById('checkInTime').value = new Date().toISOString().slice(0, 16);
+        const modal = new bootstrap.Modal(document.getElementById('recordAttendanceModal'));
+        modal.show();
+    });
+    
+    // Save attendance button
+    document.getElementById('saveAttendanceBtn').addEventListener('click', saveAttendance);
+}
+
+function saveAttendance() {
+    const memberId = document.getElementById('memberId').value;
+    const checkInTime = document.getElementById('checkInTime').value;
+    
+    fetch('/api/admin/attendance', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            memberId,
+            checkInTime
+        })
+    })
+    .then(response => response.json())
+    .then(() => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('recordAttendanceModal'));
+        modal.hide();
+        loadAttendanceData();
+    })
+    .catch(error => console.error('Error saving attendance:', error));
+}
+
+function recordCheckOut(attendanceId) {
+    fetch(`/api/admin/attendance/${attendanceId}/checkout`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(() => loadAttendanceData())
+    .catch(error => console.error('Error recording checkout:', error));
+}
+
+// Utility functions
+function formatDateTime(dateString) {
+    return new Date(dateString).toLocaleString();
+}
+
+function calculateDuration(checkIn, checkOut) {
+    if (!checkOut) return '-';
+    const duration = new Date(checkOut) - new Date(checkIn);
+    const hours = Math.floor(duration / (1000 * 60 * 60));
+    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+</script>
+
+<style>
+.attendance-container {
+    padding: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 10px;
+}
+
+.table {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table thead th {
+    background: var(--light-gray);
+    border: none;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .filters-section .row > div {
+        margin-bottom: 15px;
+    }
+    
+    .filters-section .text-end {
+        text-align: left !important;
+    }
+}
+</style>
